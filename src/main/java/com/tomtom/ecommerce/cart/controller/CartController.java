@@ -30,7 +30,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 @Api(value = "ECommerce Cart API")
 @RestController
-@RequestMapping(value = "/user")
+@RequestMapping(value = "ecommerce-cart-api/user")
 public class CartController {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(CartController.class);
