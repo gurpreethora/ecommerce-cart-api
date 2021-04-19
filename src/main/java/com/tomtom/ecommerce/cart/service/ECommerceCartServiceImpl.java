@@ -13,9 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
-import com.netflix.appinfo.InstanceInfo;
-import com.netflix.discovery.EurekaClient;
-import com.netflix.discovery.shared.Application;
 import com.tomtom.ecommerce.cart.exception.EmptyCartECommerceException;
 import com.tomtom.ecommerce.cart.exception.InvalidQuantityECommerceException;
 import com.tomtom.ecommerce.cart.exception.ProductNotFoundECommerceException;
@@ -41,31 +38,24 @@ public class ECommerceCartServiceImpl implements ECommerceCartService {
 	@Autowired
     private RestTemplate restTemplate;
 	
-	@Autowired
-    private EurekaClient eurekaClient;
-	 
-    @Value("${ecommerce.product.api.name}")
+	@Value("${ecommerce.product.api.name}")
     private String ecommerceProductApiName;
 
 	private final CartDataAccessRepository cartDataAccessRepository;
-	
-	private String productApiURL() {
-		Application application = eurekaClient.getApplication(ecommerceProductApiName);
-		InstanceInfo instanceInfo = application.getInstances().get(0);
-		return "http://" + instanceInfo.getIPAddr() + ":" + instanceInfo.getPort() + "/"+ecommerceProductApiName;
-
-	}
 	
 	@Autowired
 	public ECommerceCartServiceImpl(CartDataAccessRepository cartDataAccessRepository) {
 		super();
 		this.cartDataAccessRepository = cartDataAccessRepository;
 	}
-
+	
+	private String getProductApiURL(){
+		return "http://" +ecommerceProductApiName +"/product/";
+	}
 	//Gets product details from ecommerce-product-api
 	public Product getProduct(Integer productId) throws ProductNotFoundECommerceException  {
 		LOGGER.debug("Trying to get product if{}" ,productId);
-		Optional<ResponseStatus> responseStatus = Optional.ofNullable(restTemplate.getForObject(productApiURL() + "/product/"+productId, ResponseStatus.class));
+		Optional<ResponseStatus> responseStatus = Optional.ofNullable(restTemplate.getForObject(this.getProductApiURL()+productId, ResponseStatus.class));
 		if(responseStatus.isPresent() && !responseStatus.get().getProducts().isEmpty() &&
 				responseStatus.get().getProducts()!=null && responseStatus.get().getProducts().stream().findFirst().isPresent()){
 			LOGGER.debug("Product found for product id {}" ,productId);

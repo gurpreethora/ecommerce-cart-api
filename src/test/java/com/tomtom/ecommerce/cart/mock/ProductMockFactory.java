@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.tomtom.ecommerce.cart.model.Product;
+import com.tomtom.ecommerce.cart.model.ResponseStatus;
 
 public class ProductMockFactory {
 
@@ -33,6 +34,14 @@ public class ProductMockFactory {
 		product.setProductPrice(productPrice);
 		product.setProductQuantity(productQuantity);
 		return product;
+	}
+
+	public static ResponseStatus getResponseStatusProduct(Product inputproduct) {
+		ResponseStatus responseStatus = new ResponseStatus();
+		List<Product> products = new ArrayList<>();
+		products.add(inputproduct);
+		responseStatus.setProducts(products);
+		return responseStatus;
 	}
 
 }

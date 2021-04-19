@@ -15,7 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import com.tomtom.ecommerce.cart.constants.ECommerceConstants;
+import com.tomtom.ecommerce.cart.constants.ECommerceCartConstants;
 import com.tomtom.ecommerce.cart.exception.EmptyCartECommerceException;
 import com.tomtom.ecommerce.cart.exception.InvalidQuantityECommerceException;
 import com.tomtom.ecommerce.cart.exception.ProductNotFoundECommerceException;
@@ -30,7 +30,7 @@ import com.tomtom.ecommerce.cart.service.ECommerceCartService;
 public class CartControllerTest {
 	
 	@InjectMocks
-	private CartController userController;
+	private CartController cartController;
 	
 	@Mock
 	private ECommerceCartService commerceService ;
@@ -46,7 +46,7 @@ public class CartControllerTest {
 	public void addCartTest() throws InvalidQuantityECommerceException, ProductNotFoundECommerceException, ProductNotInStockECommerceException, EmptyCartECommerceException{
 		ProductQuantityCart productQuantityCart = ProductQuantityMockFactory.getDummyValuedProduct(); 
 		when(commerceService.addProductsToCart(USER_ID, productQuantityCart)).thenReturn(new OrderDetails());
-		ResponseEntity<ResponseStatus> respo = userController.addProductsToCart(USER_ID,productQuantityCart);
+		ResponseEntity<ResponseStatus> respo = cartController.addProductsToCart(USER_ID,productQuantityCart);
 		assertNotNull(respo);
 		assertEquals(HttpStatus.CREATED, respo.getStatusCode());
 	}
@@ -55,19 +55,19 @@ public class CartControllerTest {
 	public void accountDetails_NotFoundMoneyManagerExceptionTest() throws InvalidQuantityECommerceException, ProductNotFoundECommerceException, ProductNotInStockECommerceException, EmptyCartECommerceException{
 		ProductQuantityCart productQuantityCart = ProductQuantityMockFactory.getDummyValuedProduct(); 
 		when(commerceService.addProductsToCart(USER_ID,productQuantityCart)).thenThrow(new InvalidQuantityECommerceException("Invalid Quantity"));
-		ResponseEntity<ResponseStatus> respo = userController.addProductsToCart(USER_ID,productQuantityCart);
+		ResponseEntity<ResponseStatus> respo = cartController.addProductsToCart(USER_ID,productQuantityCart);
 		assertNotNull(respo);
 		assertEquals(HttpStatus.OK, respo.getStatusCode());
-		assertEquals(ECommerceConstants.FAILURE, respo.getBody().getStatus());
+		assertEquals(ECommerceCartConstants.FAILURE, respo.getBody().getStatus());
 		assertEquals("Invalid Quantity", respo.getBody().getMessages().get(0));
 	}
 	
 	@Test
 	public void getCartTest() throws EmptyCartECommerceException, ProductNotFoundECommerceException{
 		when(commerceService.getUserCart(USER_ID)).thenReturn(OrderDetailsMockFactory.getDummyValuedOrderDetails());
-		ResponseEntity<ResponseStatus> respo = userController.getUserCart(USER_ID);
+		ResponseEntity<ResponseStatus> respo = cartController.getUserCart(USER_ID);
 		assertNotNull(respo);
-		assertEquals(ECommerceConstants.SUCCESS,respo.getBody().getStatus());
+		assertEquals(ECommerceCartConstants.SUCCESS,respo.getBody().getStatus());
 		assertEquals("In Cart",respo.getBody().getOrderDetails().getStatus());
 		assertEquals(HttpStatus.OK, respo.getStatusCode());
 	}
@@ -75,29 +75,29 @@ public class CartControllerTest {
 	@Test
 	public void getCartTest_ProductNotFoundECommerceException() throws EmptyCartECommerceException, ProductNotFoundECommerceException{
 		when(commerceService.getUserCart(USER_ID)).thenThrow(new ProductNotFoundECommerceException("Invalid Product"));
-		ResponseEntity<ResponseStatus> respo = userController.getUserCart(USER_ID);
+		ResponseEntity<ResponseStatus> respo = cartController.getUserCart(USER_ID);
 		assertNotNull(respo);
 		assertEquals(HttpStatus.OK, respo.getStatusCode());
-		assertEquals(ECommerceConstants.FAILURE, respo.getBody().getStatus());
+		assertEquals(ECommerceCartConstants.FAILURE, respo.getBody().getStatus());
 		assertEquals("Invalid Product", respo.getBody().getMessages().get(0));
 	}
 	
 	@Test
 	public void getCartTest_InvalidQuantityECommerceException() throws EmptyCartECommerceException, ProductNotFoundECommerceException{
 		when(commerceService.getUserCart(USER_ID)).thenThrow(new EmptyCartECommerceException("Cart Empty"));
-		ResponseEntity<ResponseStatus> respo = userController.getUserCart(USER_ID);
+		ResponseEntity<ResponseStatus> respo = cartController.getUserCart(USER_ID);
 		assertNotNull(respo);
 		assertEquals(HttpStatus.OK, respo.getStatusCode());
-		assertEquals(ECommerceConstants.FAILURE, respo.getBody().getStatus());
+		assertEquals(ECommerceCartConstants.FAILURE, respo.getBody().getStatus());
 		assertEquals("Cart Empty", respo.getBody().getMessages().get(0));
 	}
 	
 	@Test
 	public void deleteUserCartTest() {
 		Mockito.doNothing().when(commerceService).deleteUserCart(USER_ID);
-		ResponseEntity<ResponseStatus> respo = userController.deleteUserCart(USER_ID);
+		ResponseEntity<ResponseStatus> respo = cartController.deleteUserCart(USER_ID);
 		assertNotNull(respo);
-		assertEquals(ECommerceConstants.SUCCESS,respo.getBody().getStatus());
+		assertEquals(ECommerceCartConstants.SUCCESS,respo.getBody().getStatus());
 		assertEquals(HttpStatus.ACCEPTED, respo.getStatusCode());
 	}
 }

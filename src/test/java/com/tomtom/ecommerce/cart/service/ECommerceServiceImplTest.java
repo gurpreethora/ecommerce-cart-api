@@ -17,6 +17,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.RestTemplate;
 
 import com.tomtom.ecommerce.cart.exception.EmptyCartECommerceException;
 import com.tomtom.ecommerce.cart.exception.InvalidQuantityECommerceException;
@@ -29,24 +31,25 @@ import com.tomtom.ecommerce.cart.model.CartDetails;
 import com.tomtom.ecommerce.cart.model.OrderDetails;
 import com.tomtom.ecommerce.cart.model.Product;
 import com.tomtom.ecommerce.cart.model.ProductQuantityCart;
+import com.tomtom.ecommerce.cart.model.ResponseStatus;
 import com.tomtom.ecommerce.cart.repository.CartDataAccessRepository;
-import com.tomtom.ecommerce.cart.repository.ProductDataAccessRepository;
 @ExtendWith(MockitoExtension.class)
 public class ECommerceServiceImplTest {
 
-	@InjectMocks
-	private ECommerceCartServiceImpl eCommerceServiceImpl;
-
-	@Mock
-	ProductDataAccessRepository productDataAccessRepository;
-	
 	@Mock
 	CartDataAccessRepository cartDataAccessRepository;
 	
-
+	@InjectMocks
+	private ECommerceCartServiceImpl eCommerceServiceImpl;
+	
+	@Mock
+    private RestTemplate restTemplate;
+	
 	@Before
 	public void initMocks() {
 		MockitoAnnotations.initMocks(this);
+		ReflectionTestUtils.setField(eCommerceServiceImpl, "ecommerceProductApiName", "dummyURL");
+		ReflectionTestUtils.setField(eCommerceServiceImpl, "restTemplate", restTemplate);
 	}
 
 	private final String USER_ID = "userId";
@@ -54,19 +57,22 @@ public class ECommerceServiceImplTest {
 	
 	@Test
 	public void getproductTest() throws ProductNotFoundECommerceException {
+		Product inputproduct = ProductMockFactory.getDummyValuedProduct();
+		ResponseStatus responseStatus = ProductMockFactory.getResponseStatusProduct(inputproduct);
 		
-		Optional<Product> inputproduct = Optional.ofNullable(ProductMockFactory.getDummyValuedProduct());
-		when(productDataAccessRepository.findById(inputproduct.get().getProductId())).thenReturn(inputproduct);
-		Product productOp = eCommerceServiceImpl.getProduct(inputproduct.get().getProductId());
+		when(restTemplate.getForObject(Mockito.anyString(), Mockito.anyObject()))
+        	.thenReturn(responseStatus);
+		
+		Product productOp = eCommerceServiceImpl.getProduct(inputproduct.getProductId());
 		assertNotNull(productOp);
 		assertTrue(productOp.equals(productOp));
-		assertEquals(inputproduct.get().getProductId(), productOp.getProductId());
+		assertEquals(inputproduct.getProductId(), productOp.getProductId());
 	}
 	
 	@Test(expected = ProductNotFoundECommerceException.class)
 	public void getproduct_ProductNotFoundECommerceExceptionTest() throws ProductNotFoundECommerceException {
-		Optional<Product> inputproduct = Optional.ofNullable(null);
-		when(productDataAccessRepository.findById(11)).thenReturn(inputproduct);
+		when(restTemplate.getForObject(Mockito.anyString(), Mockito.anyObject()))
+    	.thenReturn(null);
 		eCommerceServiceImpl.getProduct(11);
 	}
 	
@@ -74,9 +80,11 @@ public class ECommerceServiceImplTest {
 	public void addProductsToCart_new_Test() throws InvalidQuantityECommerceException, ProductNotFoundECommerceException, ProductNotInStockECommerceException, EmptyCartECommerceException{
 		ProductQuantityCart productQuantityCart = ProductQuantityMockFactory.getDummyValuedProduct();
 		Product productWith5Quantity = ProductMockFactory.getDummyValuedProduct();
+		ResponseStatus responseStatus = ProductMockFactory.getResponseStatusProduct(productWith5Quantity);
 		
 		when(cartDataAccessRepository.findById(USER_ID)).thenReturn(Optional.ofNullable(null));
-		when(productDataAccessRepository.findById(productWith5Quantity.getProductId())).thenReturn(Optional.ofNullable(productWith5Quantity));
+		when(restTemplate.getForObject(Mockito.anyString(), Mockito.anyObject()))
+    	.thenReturn(responseStatus);
 		when(cartDataAccessRepository.save(Mockito.any(CartDetails.class))).thenReturn(new CartDetails());
 		
 		OrderDetails orderDetails = eCommerceServiceImpl.addProductsToCart(USER_ID,productQuantityCart);
@@ -93,9 +101,12 @@ public class ECommerceServiceImplTest {
 		ProductQuantityCart productQuantityCart_10_products = ProductQuantityMockFactory.getDummyValuedProduct();
 		Product productWith5Quantity = ProductMockFactory.getDummyValuedProduct();
 		CartDetails cartDetails = CartDetailsMockFactory.getDummyValuedCartDetails();
+		ResponseStatus responseStatus = ProductMockFactory.getResponseStatusProduct(productWith5Quantity);
 		
+		when(cartDataAccessRepository.findById(USER_ID)).thenReturn(Optional.ofNullable(null));
+		when(restTemplate.getForObject(Mockito.anyString(), Mockito.anyObject()))
+    	.thenReturn(responseStatus);
 		when(cartDataAccessRepository.findById(USER_ID)).thenReturn(Optional.ofNullable(cartDetails));
-		when(productDataAccessRepository.findById(productWith5Quantity.getProductId())).thenReturn(Optional.ofNullable(productWith5Quantity));
 		when(cartDataAccessRepository.save(Mockito.any(CartDetails.class))).thenReturn(new CartDetails());
 		
 		eCommerceServiceImpl.addProductsToCart(USER_ID,productQuantityCart_10_products);
@@ -109,9 +120,12 @@ public class ECommerceServiceImplTest {
 		CartDetails cartDetails = CartDetailsMockFactory.getDummyValuedCartDetails();
 		cartDetails.getLstProductQuantityCart().get(0).setProductQuantity(1); 		//setting existing quantity as 1
 		cartDetails.getLstProductQuantityCart().remove(1);							// removing not present data in DB for product
+		ResponseStatus responseStatus = ProductMockFactory.getResponseStatusProduct(productWith5Quantity);
 		
+		when(cartDataAccessRepository.findById(USER_ID)).thenReturn(Optional.ofNullable(null));
+		when(restTemplate.getForObject(Mockito.anyString(), Mockito.anyObject()))
+    	.thenReturn(responseStatus);
 		when(cartDataAccessRepository.findById(USER_ID)).thenReturn((Optional.ofNullable(cartDetails)));
-		when(productDataAccessRepository.findById(productWith5Quantity.getProductId())).thenReturn(Optional.ofNullable(productWith5Quantity));
 		when(cartDataAccessRepository.save(Mockito.any(CartDetails.class))).thenReturn(new CartDetails());
 		
 		OrderDetails orderDetails = eCommerceServiceImpl.addProductsToCart(USER_ID,productQuantityCart);
@@ -131,9 +145,13 @@ public class ECommerceServiceImplTest {
 		CartDetails cartDetails = CartDetailsMockFactory.getDummyValuedCartDetails();
 		cartDetails.getLstProductQuantityCart().get(0).setProductQuantity(1); 		//setting existing quantity as 1
 		cartDetails.getLstProductQuantityCart().remove(1);							// removing not present data in DB for product
+		ResponseStatus responseStatus = ProductMockFactory.getResponseStatusProduct(productWith5Quantity);
 		
+		when(cartDataAccessRepository.findById(USER_ID)).thenReturn(Optional.ofNullable(null));
+		when(restTemplate.getForObject(Mockito.anyString(), Mockito.anyObject()))
+    	.thenReturn(responseStatus);
 		when(cartDataAccessRepository.findById(USER_ID)).thenReturn((Optional.ofNullable(cartDetails)));
-		when(productDataAccessRepository.findById(productWith5Quantity.getProductId())).thenReturn(Optional.ofNullable(productWith5Quantity));
+		
 		
 		eCommerceServiceImpl.addProductsToCart(USER_ID,productQuantityCart);
 	}
@@ -144,9 +162,14 @@ public class ECommerceServiceImplTest {
 		CartDetails cartDetails = CartDetailsMockFactory.getDummyValuedCartDetails();
 		Product product1 = ProductMockFactory.getProduct("product1", 1, 5, BigDecimal.TEN);
 		Product product2 = ProductMockFactory.getProduct("product2", 2, 10, BigDecimal.ONE);
+		
+		ResponseStatus responseStatus1 = ProductMockFactory.getResponseStatusProduct(product1);
+		ResponseStatus responseStatus2 = ProductMockFactory.getResponseStatusProduct(product2);
+		
 		when(cartDataAccessRepository.findById(USER_ID)).thenReturn(Optional.ofNullable(cartDetails));
-		when(productDataAccessRepository.findById(product1.getProductId())).thenReturn(Optional.ofNullable(product1));
-		when(productDataAccessRepository.findById(product2.getProductId())).thenReturn(Optional.ofNullable(product2));
+		when(restTemplate.getForObject(Mockito.anyString(), Mockito.anyObject()))
+    	.thenReturn(responseStatus1, responseStatus2);
+		
 		OrderDetails orderDetails = eCommerceServiceImpl.getUserCart(USER_ID);
 		assertNotNull(orderDetails);
 		assertEquals(cartDetails.getUserId(), orderDetails.getUserId());

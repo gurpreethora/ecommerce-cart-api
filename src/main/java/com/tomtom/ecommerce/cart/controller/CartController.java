@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tomtom.ecommerce.cart.builder.ECommerceResponseBuilder;
-import com.tomtom.ecommerce.cart.constants.ECommerceConstants;
+import com.tomtom.ecommerce.cart.constants.ECommerceCartConstants;
 import com.tomtom.ecommerce.cart.model.OrderDetails;
 import com.tomtom.ecommerce.cart.model.ProductQuantityCart;
 import com.tomtom.ecommerce.cart.model.ResponseStatus;
@@ -50,14 +50,14 @@ public class CartController {
 			orderDetails.setUserId(userId);
 		} catch (Exception e) {
 			LOGGER.warn("Exception occured while adding product : ", e);
-			return ECommerceResponseBuilder.buildResponse(ECommerceConstants.FAILURE,HttpStatus.OK, e.getMessage());
+			return ECommerceResponseBuilder.buildResponse(ECommerceCartConstants.FAILURE,HttpStatus.OK, e.getMessage());
 		}
-		return ECommerceResponseBuilder.buildResponse(ECommerceConstants.SUCCESS, HttpStatus.CREATED, orderDetails);
+		return ECommerceResponseBuilder.buildResponse(ECommerceCartConstants.SUCCESS, HttpStatus.CREATED, orderDetails);
 	}
 	
 	@ApiOperation( value = "Gets products in users cart")
 	@ApiResponses(value = {
-			@ApiResponse(response = OrderDetails.class, message = ECommerceConstants.SUCCESS, code = 200)})
+			@ApiResponse(response = OrderDetails.class, message = ECommerceCartConstants.SUCCESS, code = 200)})
 	@GetMapping (value = "{userId}/cart/")
 	public ResponseEntity<ResponseStatus> getUserCart (@PathVariable @NotBlank @Size(min = 1, max = 50) String userId){
 		OrderDetails orderDetails;
@@ -66,14 +66,14 @@ public class CartController {
 			orderDetails.setStatus("In Cart");
 		} catch (Exception e) {
 			LOGGER.warn("Exception occured while getting user cart : ", e);
-			return ECommerceResponseBuilder.buildResponse(ECommerceConstants.FAILURE, HttpStatus.OK,  e.getMessage());
+			return ECommerceResponseBuilder.buildResponse(ECommerceCartConstants.FAILURE, HttpStatus.OK,  e.getMessage());
 		}
-		return ECommerceResponseBuilder.buildResponse(ECommerceConstants.SUCCESS, HttpStatus.OK, orderDetails);
+		return ECommerceResponseBuilder.buildResponse(ECommerceCartConstants.SUCCESS, HttpStatus.OK, orderDetails);
 	}
 	
 	@ApiOperation( value = "Clear User's cart")
 	@ApiResponses(value = {
-			@ApiResponse(response = String.class, message = ECommerceConstants.SUCCESS, code = 200)})
+			@ApiResponse(response = String.class, message = ECommerceCartConstants.SUCCESS, code = 200)})
 	@DeleteMapping (value = "cart/{userId}")
 	public ResponseEntity<ResponseStatus> deleteUserCart (@PathVariable @NotBlank @Size(min = 1, max = 50) String userId){
 		try {
@@ -81,9 +81,9 @@ public class CartController {
 			LOGGER.debug("Cart cleared for user : {}", userId);
 		} catch (Exception e) {
 			LOGGER.warn("Exception occured while deleting cart : ", e);
-			return ECommerceResponseBuilder.buildResponse(ECommerceConstants.FAILURE,HttpStatus.OK , e.getMessage());
+			return ECommerceResponseBuilder.buildResponse(ECommerceCartConstants.FAILURE,HttpStatus.OK , e.getMessage());
 		}
-		return ECommerceResponseBuilder.buildResponse(ECommerceConstants.SUCCESS, HttpStatus.ACCEPTED);
+		return ECommerceResponseBuilder.buildResponse(ECommerceCartConstants.SUCCESS, HttpStatus.ACCEPTED);
 	}
 
 }
