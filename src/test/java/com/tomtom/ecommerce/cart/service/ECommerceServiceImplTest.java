@@ -30,7 +30,6 @@ import com.tomtom.ecommerce.cart.model.OrderDetails;
 import com.tomtom.ecommerce.cart.model.Product;
 import com.tomtom.ecommerce.cart.model.ProductQuantityCart;
 import com.tomtom.ecommerce.cart.repository.CartDataAccessRepository;
-import com.tomtom.ecommerce.cart.repository.OrderDataAccessRepository;
 import com.tomtom.ecommerce.cart.repository.ProductDataAccessRepository;
 @ExtendWith(MockitoExtension.class)
 public class ECommerceServiceImplTest {
@@ -44,8 +43,6 @@ public class ECommerceServiceImplTest {
 	@Mock
 	CartDataAccessRepository cartDataAccessRepository;
 	
-	@Mock
-	OrderDataAccessRepository orderDataAccessRepository;
 
 	@Before
 	public void initMocks() {

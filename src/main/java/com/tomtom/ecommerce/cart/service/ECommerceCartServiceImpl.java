@@ -8,9 +8,14 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
+import com.netflix.appinfo.InstanceInfo;
+import com.netflix.discovery.EurekaClient;
+import com.netflix.discovery.shared.Application;
 import com.tomtom.ecommerce.cart.exception.EmptyCartECommerceException;
 import com.tomtom.ecommerce.cart.exception.InvalidQuantityECommerceException;
 import com.tomtom.ecommerce.cart.exception.ProductNotFoundECommerceException;
@@ -20,9 +25,8 @@ import com.tomtom.ecommerce.cart.model.OrderDetails;
 import com.tomtom.ecommerce.cart.model.Product;
 import com.tomtom.ecommerce.cart.model.ProductOrder;
 import com.tomtom.ecommerce.cart.model.ProductQuantityCart;
+import com.tomtom.ecommerce.cart.model.ResponseStatus;
 import com.tomtom.ecommerce.cart.repository.CartDataAccessRepository;
-import com.tomtom.ecommerce.cart.repository.OrderDataAccessRepository;
-import com.tomtom.ecommerce.cart.repository.ProductDataAccessRepository;
 
 /**
  * @author Gurpreet Hora
@@ -33,26 +37,39 @@ import com.tomtom.ecommerce.cart.repository.ProductDataAccessRepository;
 public class ECommerceCartServiceImpl implements ECommerceCartService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ECommerceCartServiceImpl.class);
-
-	private final ProductDataAccessRepository productDataAccessRepository;
-	
-	private final CartDataAccessRepository cartDataAccessRepository;
-	
 	
 	@Autowired
-	public ECommerceCartServiceImpl(ProductDataAccessRepository productDataAccessRepository,
-			CartDataAccessRepository cartDataAccessRepository, OrderDataAccessRepository orderDataAccessRepository) {
+    private RestTemplate restTemplate;
+	
+	@Autowired
+    private EurekaClient eurekaClient;
+	 
+    @Value("${ecommerce.product.api.name}")
+    private String ecommerceProductApiName;
+
+	private final CartDataAccessRepository cartDataAccessRepository;
+	
+	private String productApiURL() {
+		Application application = eurekaClient.getApplication(ecommerceProductApiName);
+		InstanceInfo instanceInfo = application.getInstances().get(0);
+		return "http://" + instanceInfo.getIPAddr() + ":" + instanceInfo.getPort() + "/"+ecommerceProductApiName;
+
+	}
+	
+	@Autowired
+	public ECommerceCartServiceImpl(CartDataAccessRepository cartDataAccessRepository) {
 		super();
-		this.productDataAccessRepository = productDataAccessRepository;
 		this.cartDataAccessRepository = cartDataAccessRepository;
 	}
 
+	//Gets product details from ecommerce-product-api
 	public Product getProduct(Integer productId) throws ProductNotFoundECommerceException  {
 		LOGGER.debug("Trying to get product if{}" ,productId);
-		Optional<Product> existingProduct = this.productDataAccessRepository.findById(productId);
-		if (existingProduct.isPresent()) {
+		Optional<ResponseStatus> responseStatus = Optional.ofNullable(restTemplate.getForObject(productApiURL() + "/product/"+productId, ResponseStatus.class));
+		if(responseStatus.isPresent() && !responseStatus.get().getProducts().isEmpty() &&
+				responseStatus.get().getProducts()!=null && responseStatus.get().getProducts().stream().findFirst().isPresent()){
 			LOGGER.debug("Product found for product id {}" ,productId);
-			return existingProduct.get();
+			return responseStatus.get().getProducts().stream().findFirst().get();
 		} else {
 			throw new ProductNotFoundECommerceException("Product not found for supplied productId : "+productId);
 		}
