@@ -3,6 +3,7 @@ package com.tomtom.ecommerce.cart.controller;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
+import javax.ws.rs.core.MediaType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +31,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 @Api(value = "ECommerce Cart API")
 @RestController
-@RequestMapping(value = "ecommerce-cart-api/user")
+@RequestMapping(value = "/user")
 public class CartController {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(CartController.class);
@@ -41,7 +42,7 @@ public class CartController {
 	@ApiOperation( value = "adds new/updates product to cart")
 	@ApiResponses(value = {
 			@ApiResponse(response = OrderDetails.class, message = "Success", code = 201)})
-	@PostMapping("{userId}/cart/product")
+	@PostMapping(value = "{userId}/cart/product", produces = MediaType.APPLICATION_JSON)
 	public ResponseEntity<ResponseStatus> addProductsToCart (@PathVariable @NotBlank @Size(min = 1, max = 50) String userId,
 			@RequestBody @Valid ProductQuantityCart productQuantityCart){
 		OrderDetails orderDetails;
@@ -58,7 +59,7 @@ public class CartController {
 	@ApiOperation( value = "Gets products in users cart")
 	@ApiResponses(value = {
 			@ApiResponse(response = OrderDetails.class, message = ECommerceCartConstants.SUCCESS, code = 200)})
-	@GetMapping (value = "{userId}/cart/")
+	@GetMapping (value = "{userId}/cart/", produces = MediaType.APPLICATION_JSON)
 	public ResponseEntity<ResponseStatus> getUserCart (@PathVariable @NotBlank @Size(min = 1, max = 50) String userId){
 		OrderDetails orderDetails;
 		try {
@@ -74,7 +75,7 @@ public class CartController {
 	@ApiOperation( value = "Clear User's cart")
 	@ApiResponses(value = {
 			@ApiResponse(response = String.class, message = ECommerceCartConstants.SUCCESS, code = 200)})
-	@DeleteMapping (value = "cart/{userId}")
+	@DeleteMapping (value = "cart/{userId}", produces = MediaType.APPLICATION_JSON)
 	public ResponseEntity<ResponseStatus> deleteUserCart (@PathVariable @NotBlank @Size(min = 1, max = 50) String userId){
 		try {
 			eCommerceService.deleteUserCart(userId);
